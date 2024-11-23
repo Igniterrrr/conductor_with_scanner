@@ -1,104 +1,121 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Conductor App</title>
-    <script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
+    <title>QR Code Scanner / Reader</title>
     <style>
-        .container {
-            width: 400px;
-            margin: 20px auto;
+        /* Embedded CSS */
+        body {
+            display: flex;
+            justify-content: center;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            box-sizing: border-box;
             text-align: center;
-            border: 2px solid #000;
-            padding: 20px;
-            border-radius: 10px;
+            background: rgb(128 0 0 / 66%);
         }
-        .button {
-            margin-top: 10px;
-            padding: 10px 20px;
-            cursor: pointer;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-        }
-        .button:hover {
-            background-color: #45a049;
-        }
-        #qr-reader {
+
+        .container {
             width: 100%;
-            margin-top: 20px;
+            max-width: 500px;
+            margin: 5px;
+        }
+
+        .container h1 {
+            color: #ffffff;
+        }
+
+        .section {
+            background-color: #ffffff;
+            padding: 50px 30px;
+            border: 1.5px solid #b2b2b2;
+            border-radius: 0.25em;
+            box-shadow: 0 20px 25px rgba(0, 0, 0, 0.25);
+        }
+
+        #my-qr-reader {
+            padding: 20px !important;
+            border: 1.5px solid #b2b2b2 !important;
+            border-radius: 8px;
+        }
+
+        #my-qr-reader img[alt="Info icon"] {
+            display: none;
+        }
+
+        #my-qr-reader img[alt="Camera based scan"] {
+            width: 100px !important;
+            height: 100px !important;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: 1px solid #b2b2b2;
+            outline: none;
+            border-radius: 0.25em;
+            color: white;
+            font-size: 15px;
+            cursor: pointer;
+            margin-top: 15px;
+            margin-bottom: 10px;
+            background-color: #008000ad;
+            transition: 0.3s background-color;
+        }
+
+        button:hover {
+            background-color: #008000;
+        }
+
+        #html5-qrcode-anchor-scan-type-change {
+            text-decoration: none !important;
+            color: #1d9bf0;
+        }
+
+        video {
+            width: 100% !important;
+            border: 1px solid #b2b2b2 !important;
+            border-radius: 0.25em;
         }
     </style>
 </head>
+
 <body>
     <div class="container">
-        <h2>Conductor App</h2>
-        <p>Scan the Passenger QR Code</p>
-        <div id="qr-reader"></div>
-
-        <div id="qrDetails" style="display:none; margin-top: 20px;">
-            <h3>Passenger Details</h3>
-            <p id="userId"></p>
-            <p id="walletBalance"></p>
-            <label for="fareAmount">Enter Fare Amount:</label>
-            <input type="number" id="fareAmount" placeholder="Enter fare amount" />
-            <button class="button" onclick="deductFare()">Deduct Fare</button>
+        <h1>Scan QR Codes</h1>
+        <div class="section">
+            <div id="my-qr-reader"></div>
         </div>
-
-        <div id="statusMessage" style="margin-top: 20px;"></div>
     </div>
-
+    <script src="https://unpkg.com/html5-qrcode"></script>
     <script>
-        // Initialize the QR code scanner
-        function onScanSuccess(decodedText, decodedResult) {
-            try {
-                const parsedData = JSON.parse(decodedText);
-                document.getElementById('userId').textContent = `User ID: ${parsedData.userId}`;
-                document.getElementById('walletBalance').textContent = `Wallet Balance: ₹${parsedData.walletBalance}`;
-                document.getElementById('qrDetails').style.display = 'block'; // Show passenger details
-                document.getElementById('statusMessage').textContent = ''; // Clear any previous status
-
-                // Stop the scanner once QR is scanned successfully
-                html5QrCode.stop();
-            } catch (error) {
-                alert('Invalid QR Code data!');
-            }
-        }
-
-        function onScanError(errorMessage) {
-            // Handle scan error
-            console.error(`QR Code scanning error: ${errorMessage}`);
-        }
-
-        const html5QrCode = new Html5Qrcode("qr-reader");
-        html5QrCode.start(
-            { facingMode: "environment" }, // Use rear camera
-            { fps: 10, qrbox: 250 },
-            onScanSuccess,
-            onScanError
-        );
-
-        function deductFare() {
-            const fareAmount = parseFloat(document.getElementById('fareAmount').value);
-            if (isNaN(fareAmount) || fareAmount <= 0) {
-                alert('Please enter a valid fare amount.');
-                return;
-            }
-
-            const userId = document.getElementById('userId').textContent.split(': ')[1];
-            const currentBalanceText = document.getElementById('walletBalance').textContent.split('₹')[1];
-            let walletBalance = parseFloat(currentBalanceText);
-
-            if (walletBalance >= fareAmount) {
-                walletBalance -= fareAmount;
-                document.getElementById('walletBalance').textContent = `Wallet Balance: ₹${walletBalance}`;
-                document.getElementById('statusMessage').textContent = `Fare of ₹${fareAmount} deducted successfully!`;
-                console.log(`Updated Passenger Data for User ID: ${userId}, New Balance: ₹${walletBalance}`);
+        // Embedded JS
+        function domReady(fn) {
+            if (
+                document.readyState === "complete" ||
+                document.readyState === "interactive"
+            ) {
+                setTimeout(fn, 1000);
             } else {
-                alert('Insufficient balance to deduct fare.');
+                document.addEventListener("DOMContentLoaded", fn);
             }
         }
+
+        domReady(function () {
+            // If found your QR code
+            function onScanSuccess(decodeText, decodeResult) {
+                alert("Your QR is: " + decodeText, decodeResult);
+            }
+
+            let htmlscanner = new Html5QrcodeScanner(
+                "my-qr-reader",
+                { fps: 10, qrbox: 250 }
+            );
+            htmlscanner.render(onScanSuccess);
+        });
     </script>
 </body>
+
 </html>
