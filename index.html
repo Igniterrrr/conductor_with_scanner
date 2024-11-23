@@ -83,6 +83,9 @@
         <h1>Conductor App</h1>
         <div class="section">
             <div id="my-qr-reader"></div>
+            <button onclick="stopScanner()">Stop Scanner</button>
+
+            <!-- Passenger Details Section -->
             <div id="passenger-details" class="details" style="display: none;">
                 <h3>Passenger Details</h3>
                 <p id="passenger-id"></p>
@@ -103,44 +106,56 @@
     </div>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script>
-        // Initialize QR Scanner
-        function domReady(fn) {
-            if (
-                document.readyState === "complete" ||
-                document.readyState === "interactive"
-            ) {
-                setTimeout(fn, 1000);
-            } else {
-                document.addEventListener("DOMContentLoaded", fn);
+        let qrScanner;
+
+        // Start QR Scanner
+        function startScanner() {
+            qrScanner = new Html5QrcodeScanner("my-qr-reader", { fps: 10, qrbox: 250 });
+            qrScanner.render(onScanSuccess, onScanError);
+        }
+
+        // Stop QR Scanner
+        function stopScanner() {
+            if (qrScanner) {
+                qrScanner.clear();
             }
         }
 
-        domReady(function () {
-            function onScanSuccess(decodedText) {
+        // Parse QR Code Data
+        function parseQRData(decodedText) {
+            try {
                 console.log("Scanned Data: ", decodedText); // Debugging log
-                try {
-                    const passengerData = JSON.parse(decodedText); // Assuming QR contains JSON
-                    if (passengerData.userId && passengerData["wallet Balance"] !== undefined) {
-                        // Update passenger details
-                        document.getElementById("passenger-id").textContent = `User ID: ${passengerData.userId}`;
-                        document.getElementById("wallet-balance").textContent = `Wallet Balance: ₹${passengerData["wallet Balance"]}`;
-                        document.getElementById("passenger-details").style.display = "block";
-                        localStorage.setItem("currentPassenger", decodedText); // Save data for further actions
-                    } else {
-                        throw new Error("Invalid QR data structure");
-                    }
-                } catch (err) {
-                    alert("Invalid QR Code! Please scan a valid passenger QR.");
+                const passengerData = JSON.parse(decodedText.trim());
+                if (passengerData.userId && passengerData["wallet Balance"] !== undefined) {
+                    return passengerData;
+                } else {
+                    throw new Error("Invalid data structure");
                 }
+            } catch (error) {
+                console.error("QR Parsing Error: ", error.message);
+                alert("Invalid QR Code! Please scan a valid passenger QR.");
+                return null;
             }
+        }
 
-            let htmlscanner = new Html5QrcodeScanner(
-                "my-qr-reader",
-                { fps: 10, qrbox: 250 }
-            );
-            htmlscanner.render(onScanSuccess);
-        });
+        // Handle Successful QR Scan
+        function onScanSuccess(decodedText) {
+            const passengerData = parseQRData(decodedText);
+            if (passengerData) {
+                document.getElementById("passenger-id").textContent = `User ID: ${passengerData.userId}`;
+                document.getElementById("wallet-balance").textContent = `Wallet Balance: ₹${passengerData["wallet Balance"]}`;
+                document.getElementById("passenger-details").style.display = "block";
+                localStorage.setItem("currentPassenger", JSON.stringify(passengerData));
+                stopScanner(); // Stop scanner after success
+            }
+        }
 
+        // Handle QR Scan Errors
+        function onScanError(error) {
+            console.warn("Scan Error: ", error);
+        }
+
+        // Deduct Fare and Update Wallet
         function deductFare() {
             const fareAmount = parseFloat(document.getElementById("fare-amount").value);
             const nextLocation = document.getElementById("next-location").value;
@@ -163,6 +178,9 @@
                 alert("Insufficient balance to deduct fare.");
             }
         }
+
+        // Start Scanner on Load
+        document.addEventListener("DOMContentLoaded", startScanner);
     </script>
 </body>
 
