@@ -126,7 +126,7 @@
             try {
                 console.log("Scanned Data: ", decodedText); // Debugging log
                 const passengerData = JSON.parse(decodedText.trim());
-                if (passengerData.userId && passengerData["wallet Balance"] !== undefined) {
+                if (passengerData.userId && passengerData.walletBalance !== undefined) {
                     return passengerData;
                 } else {
                     throw new Error("Invalid data structure");
@@ -143,7 +143,7 @@
             const passengerData = parseQRData(decodedText);
             if (passengerData) {
                 document.getElementById("passenger-id").textContent = `User ID: ${passengerData.userId}`;
-                document.getElementById("wallet-balance").textContent = `Wallet Balance: ₹${passengerData["wallet Balance"]}`;
+                document.getElementById("wallet-balance").textContent = `Wallet Balance: ₹${passengerData.walletBalance}`;
                 document.getElementById("passenger-details").style.display = "block";
                 localStorage.setItem("currentPassenger", JSON.stringify(passengerData));
                 stopScanner(); // Stop scanner after success
@@ -166,13 +166,13 @@
             }
 
             const passengerData = JSON.parse(localStorage.getItem("currentPassenger"));
-            if (passengerData["wallet Balance"] >= fareAmount) {
-                passengerData["wallet Balance"] -= fareAmount; // Deduct fare
-                document.getElementById("remaining-balance").textContent = `Remaining Balance: ₹${passengerData["wallet Balance"]}`;
+            if (passengerData.walletBalance >= fareAmount) {
+                passengerData.walletBalance -= fareAmount; // Deduct fare
+                document.getElementById("remaining-balance").textContent = `Remaining Balance: ₹${passengerData.walletBalance}`;
                 localStorage.setItem("currentPassenger", JSON.stringify(passengerData)); // Update local storage
 
                 alert(
-                    `Fare deducted: ₹${fareAmount}\nRemaining Balance: ₹${passengerData["wallet Balance"]}\nNext Location: ${nextLocation}`
+                    `Fare deducted: ₹${fareAmount}\nRemaining Balance: ₹${passengerData.walletBalance}\nNext Location: ${nextLocation}`
                 );
             } else {
                 alert("Insufficient balance to deduct fare.");
